@@ -65,7 +65,7 @@ app.use(fileUpload());
 //     },
 // };
 // app.use(express.static(path.join(__dirname, 'public'), options));
-app.use(express.static(path.join(__dirname, 'build')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 
 
@@ -76,7 +76,7 @@ app.use('/api/v1/notice',notice);
 // app.get('*.*', express.static('./public/frontend')); // production
 
 app.get('/*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 
