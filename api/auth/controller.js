@@ -5,10 +5,22 @@ const User = require('../user/model');
 
 exports.register = asyncHandler(async (req, res, next)=>{
     const {fname,lname, email,year,branch,regid, password,username,role} = req.body;
-    req.body.username = req.body.fname + req.body.regid;
+    const preEmail = await User.findOne({email});
+    const preReg = await User.findOne({regid});
+    const x=req.body.regid;
+    if(preEmail){
+        return next(new ErrorResponse('Already registered with this email',400));
+    }
+    if(preReg){
+        return next(new ErrorResponse('Already Registered with this Registration Number',401));
+    }
+    if(x.toString().length!=5){
+        return next(new ErrorResponse('Wrong registration number',402));
+    }
     const user = await User.create({fname,lname,branch,year,regid, email, password,username,role});
+
     sendTokenResponse(user, 200, res);
-    console.log(user);
+
 });
 
 exports.login = asyncHandler(async (req, res, next) => {
@@ -25,24 +37,27 @@ exports.login = asyncHandler(async (req, res, next) => {
     }
 
     // Check for user
-    const user = await User.findOne({email}).select('+password').select('+role');
-
+    const user = await User.findOne({email}).select('+password').select('+role').select('+fname').select('+branch').select('+regid');
     if (!user) {
-        return next(new ErrorResponse('Invalid credentials', 401));
+        return next(new ErrorResponse('Invalid credentials', 400));
     }
 
     //  Check if type matches
     if(user.role!=role) {
-        return next(new ErrorResponse('Invalid credentials',401));
+        console.log(user.role);
+        return next(new ErrorResponse('Invalid role',401));
     }
     // Check if password matches
     const isMatch = await user.matchPassword(password);
     
 
     if (!isMatch) {
-        return next(new ErrorResponse('Invalid credentials', 401));
+        return next(new ErrorResponse('Invalid credentials', 402));
     }
-    sendTokenResponse(user, 200, res);
+    return res.status(200).json({
+        success: true,
+        user
+    })
 });
 
 exports.logout = asyncHandler(async (req, res, next) => {
